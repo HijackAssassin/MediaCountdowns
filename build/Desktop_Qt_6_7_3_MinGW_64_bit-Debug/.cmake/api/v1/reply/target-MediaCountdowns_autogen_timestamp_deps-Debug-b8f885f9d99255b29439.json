@@ -1,0 +1,31 @@
+{
+	"backtrace" : 0,
+	"backtraceGraph" : 
+	{
+		"commands" : [],
+		"files" : 
+		[
+			"MainApp/CMakeLists.txt"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 0
+			}
+		]
+	},
+	"folder" : 
+	{
+		"name" : "QtInternalTargets"
+	},
+	"id" : "MediaCountdowns_autogen_timestamp_deps::@4da9c7c55740fad35c79",
+	"isGeneratorProvided" : true,
+	"name" : "MediaCountdowns_autogen_timestamp_deps",
+	"paths" : 
+	{
+		"build" : "MainApp",
+		"source" : "MainApp"
+	},
+	"sources" : [],
+	"type" : "UTILITY"
+}
