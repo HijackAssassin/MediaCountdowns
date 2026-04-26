@@ -1,4 +1,4 @@
-# 🎬 CineCountdown
+# 🎬 Media Countdowns
 
 **The successor to EventCountdown** — tile-based media release countdown for Windows.  
 Built with **C++ · Qt 6 · CMake**.
@@ -23,7 +23,7 @@ Built with **C++ · Qt 6 · CMake**.
 ## Architecture
 
 ```
-CineCountdown/
+MediaCountdown/
 │
 ├── CMakeLists.txt              ← Root workspace (open this in Qt Creator)
 ├── build.bat                   ← CLI build (Qt 6 + CMake + Ninja)
@@ -32,7 +32,7 @@ CineCountdown/
 ├── shared/
 │   └── tiledata.h              ← Core data model shared by both apps
 │
-├── MainApp/                    ← CineCountdown.exe  (tile manager)
+├── MainApp/                    ← MediaCountdown.exe  (tile manager)
 │   ├── CMakeLists.txt
 │   ├── resources/
 │   │   └── app.rc              ← Windows icon resource
@@ -44,7 +44,7 @@ CineCountdown/
 │       ├── jsonmanager.*       ← Reads/writes tiles.json
 │       └── addtiledialog.*     ← (reserved for future use)
 │
-└── TrayApp/                    ← CineCountdownTray.exe  (background daemon)
+└── TrayApp/                    ← MediaCountdownTray.exe  (background daemon)
     ├── CMakeLists.txt
     └── src/
         ├── main.cpp
@@ -57,7 +57,7 @@ CineCountdown/
 
 All tile data is stored in:
 ```
-%APPDATA%\CineCountdown\tiles.json
+%APPDATA%\MediaCountdown\tiles.json
 ```
 
 ### tiles.json format
@@ -98,7 +98,7 @@ and finds `Month DD, YYYY` anywhere in the string using a regex.
 
 ## IPC between apps
 
-The main app sends `REFRESH\n` to a named local socket called `CineCountdownTray`  
+The main app sends `REFRESH\n` to a named local socket called `MediaCountdownTray`  
 whenever it saves tiles. The tray app reloads `tiles.json` and re-syncs  
 notification state. If the tray isn't running, the write fails silently.
 
@@ -144,11 +144,11 @@ Produces a self-contained `dist\` folder with both `.exe` files and all Qt DLLs.
 
 ## Running
 
-1. Start **`CineCountdownTray.exe`** first — it goes to the system tray silently
-2. Start **`CineCountdown.exe`** — the tile manager window opens
+1. Start **`MediaCountdownTray.exe`** first — it goes to the system tray silently
+2. Start **`MediaCountdown.exe`** — the tile manager window opens
 
 To make the tray app start automatically on login, create a shortcut to  
-`CineCountdownTray.exe` and place it in:
+`MediaCountdownTray.exe` and place it in:
 ```
 %APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup\
 ```
