@@ -1,0 +1,31 @@
+{
+	"backtrace" : 0,
+	"backtraceGraph" : 
+	{
+		"commands" : [],
+		"files" : 
+		[
+			"TrayApp/CMakeLists.txt"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 0
+			}
+		]
+	},
+	"folder" : 
+	{
+		"name" : "QtInternalTargets"
+	},
+	"id" : "MediaCountdownsNotifier_autogen_timestamp_deps::@46487a88c280b4b9eb25",
+	"isGeneratorProvided" : true,
+	"name" : "MediaCountdownsNotifier_autogen_timestamp_deps",
+	"paths" : 
+	{
+		"build" : "TrayApp",
+		"source" : "TrayApp"
+	},
+	"sources" : [],
+	"type" : "UTILITY"
+}

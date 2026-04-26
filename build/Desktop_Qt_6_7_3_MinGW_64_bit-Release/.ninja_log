@@ -1,27 +1,27 @@
 # ninja log v6
 12	916	7988752839179102	TrayApp/MediaCountdownsNotifier_autogen/timestamp	3d2042eb7d8e9c3
 12	916	7988752839179102	TrayApp/MediaCountdownsNotifier_autogen/mocs_compilation.cpp	3d2042eb7d8e9c3
+996	1042	7988752840979521	MainApp/MediaCountdowns_autogen/3YJK5W5UP7/qrc_resources.cpp	900fc0ba2966e90c
 12	916	7988752839179102	F:/Patrick/Projects/Media Countdowns/Media Countdowns/build/Desktop_Qt_6_7_3_MinGW_64_bit-Release/TrayApp/MediaCountdownsNotifier_autogen/timestamp	3d2042eb7d8e9c3
+1055	3039	7988752841179568	MainApp/CMakeFiles/MediaCountdowns.dir/src/edittiledialog.cpp.obj	4973885064be836e
+7	995	7988752839919272	F:/Patrick/Projects/Media Countdowns/Media Countdowns/build/Desktop_Qt_6_7_3_MinGW_64_bit-Release/MainApp/MediaCountdowns_autogen/timestamp	98322e2fb786bd2
 12	916	7988752839179102	F:/Patrick/Projects/Media Countdowns/Media Countdowns/build/Desktop_Qt_6_7_3_MinGW_64_bit-Release/TrayApp/MediaCountdownsNotifier_autogen/mocs_compilation.cpp	3d2042eb7d8e9c3
+7	995	7988752839919272	F:/Patrick/Projects/Media Countdowns/Media Countdowns/build/Desktop_Qt_6_7_3_MinGW_64_bit-Release/MainApp/MediaCountdowns_autogen/mocs_compilation.cpp	98322e2fb786bd2
 7	995	7988752839919272	MainApp/MediaCountdowns_autogen/timestamp	98322e2fb786bd2
 7	995	7988752839919272	MainApp/MediaCountdowns_autogen/mocs_compilation.cpp	98322e2fb786bd2
-7	995	7988752839919272	F:/Patrick/Projects/Media Countdowns/Media Countdowns/build/Desktop_Qt_6_7_3_MinGW_64_bit-Release/MainApp/MediaCountdowns_autogen/timestamp	98322e2fb786bd2
-7	995	7988752839919272	F:/Patrick/Projects/Media Countdowns/Media Countdowns/build/Desktop_Qt_6_7_3_MinGW_64_bit-Release/MainApp/MediaCountdowns_autogen/mocs_compilation.cpp	98322e2fb786bd2
-996	1042	7988752840979521	MainApp/MediaCountdowns_autogen/3YJK5W5UP7/qrc_resources.cpp	900fc0ba2966e90c
 996	1042	7988752840979521	F:/Patrick/Projects/Media Countdowns/Media Countdowns/build/Desktop_Qt_6_7_3_MinGW_64_bit-Release/MainApp/MediaCountdowns_autogen/3YJK5W5UP7/qrc_resources.cpp	900fc0ba2966e90c
 1062	1125	7988752841249588	MainApp/CMakeFiles/MediaCountdowns.dir/MediaCountdowns_autogen/3YJK5W5UP7/qrc_resources.cpp.obj	252d6ab0f5122df5
+1047	4723	7988752841099551	MainApp/CMakeFiles/MediaCountdowns.dir/src/mainwindow.cpp.obj	53e3b56cc7d92112
 919	2195	7988752839819248	TrayApp/CMakeFiles/MediaCountdownsNotifier.dir/MediaCountdownsNotifier_autogen/mocs_compilation.cpp.obj	29fd61a56d827c47
 921	2232	7988752839839252	TrayApp/CMakeFiles/MediaCountdownsNotifier.dir/src/main.cpp.obj	666f26c9176b9e0c
+1044	3208	7988752841069542	MainApp/CMakeFiles/MediaCountdowns.dir/src/main.cpp.obj	bac72fd798434f2b
 1051	2634	7988752841139558	MainApp/CMakeFiles/MediaCountdowns.dir/src/addtiledialog.cpp.obj	93eb1ad02a11d2f4
 925	2794	7988752839879262	TrayApp/CMakeFiles/MediaCountdownsNotifier.dir/__/MainApp/src/jsonmanager.cpp.obj	ee5b71f295be0914
 1053	2982	7988752841159564	MainApp/CMakeFiles/MediaCountdowns.dir/src/customtiledialog.cpp.obj	bffd40805661c92a
 1060	2988	7988752841229580	MainApp/CMakeFiles/MediaCountdowns.dir/src/jsonmanager.cpp.obj	3a441a10f1ef4c4e
-1055	3039	7988752841179568	MainApp/CMakeFiles/MediaCountdowns.dir/src/edittiledialog.cpp.obj	4973885064be836e
-1044	3208	7988752841069542	MainApp/CMakeFiles/MediaCountdowns.dir/src/main.cpp.obj	bac72fd798434f2b
 1049	3260	7988752841119557	MainApp/CMakeFiles/MediaCountdowns.dir/src/tilewidget.cpp.obj	eca108ccb92b1cc8
 1042	3469	7988752841049537	MainApp/CMakeFiles/MediaCountdowns.dir/MediaCountdowns_autogen/mocs_compilation.cpp.obj	948ba6fb92216b21
 1057	3926	7988752841199575	MainApp/CMakeFiles/MediaCountdowns.dir/src/tmdbscraper.cpp.obj	5850511d952fa279
+4723	4889	7988752877856854	MediaCountdowns.exe	9702b0eda690db12
 923	4129	7988752839859258	TrayApp/CMakeFiles/MediaCountdownsNotifier.dir/src/trayapp.cpp.obj	940b2a4623f4c071
 4130	4319	7988752871925459	MediaCountdownsNotifier.exe	c0bde9f79319700b
-1047	4723	7988752841099551	MainApp/CMakeFiles/MediaCountdowns.dir/src/mainwindow.cpp.obj	53e3b56cc7d92112
-4723	4889	7988752877856854	MediaCountdowns.exe	9702b0eda690db12

@@ -191,7 +191,7 @@ CMAKE_PROJECT_HOMEPAGE_URL:STATIC=
 CMAKE_PROJECT_INCLUDE_BEFORE:FILEPATH=F:/Patrick/Projects/Media Countdowns/Media Countdowns/build/Desktop_Qt_6_7_3_MinGW_64_bit-Release/.qtcreator/cmake-helper/qtcreator-project.cmake
 
 //Value Computed by CMake
-CMAKE_PROJECT_NAME:STATIC=MediaCountdowns
+CMAKE_PROJECT_NAME:STATIC=CineCountdown
 
 //Value Computed by CMake
 CMAKE_PROJECT_VERSION:STATIC=1.0.0
@@ -299,15 +299,6 @@ CineCountdown_IS_TOP_LEVEL:STATIC=ON
 
 //Value Computed by CMake
 CineCountdown_SOURCE_DIR:STATIC=F:/Patrick/Projects/Media Countdowns/Media Countdowns
-
-//Value Computed by CMake
-MediaCountdowns_BINARY_DIR:STATIC=F:/Patrick/Projects/Media Countdowns/Media Countdowns/build/Desktop_Qt_6_7_3_MinGW_64_bit-Release
-
-//Value Computed by CMake
-MediaCountdowns_IS_TOP_LEVEL:STATIC=ON
-
-//Value Computed by CMake
-MediaCountdowns_SOURCE_DIR:STATIC=F:/Patrick/Projects/Media Countdowns/Media Countdowns
 
 //Additional directories where find(Qt6 ...) host Qt components
 // are searched

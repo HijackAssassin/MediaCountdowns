@@ -1,0 +1,140 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"childIndexes" : 
+					[
+						1,
+						2
+					],
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-.-Release-d0094a50bb2071803777.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.16"
+					},
+					"projectIndex" : 0,
+					"source" : "."
+				},
+				{
+					"build" : "MainApp",
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-MainApp-Release-9bd3a4488c46d8f599f1.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.16"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "MainApp",
+					"targetIndexes" : 
+					[
+						0,
+						4,
+						5
+					]
+				},
+				{
+					"build" : "TrayApp",
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-TrayApp-Release-1975a5a49a75c93ff459.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.16"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "TrayApp",
+					"targetIndexes" : 
+					[
+						1,
+						2,
+						3
+					]
+				}
+			],
+			"name" : "Release",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0,
+						1,
+						2
+					],
+					"name" : "MediaCountdowns",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3,
+						4,
+						5
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 1,
+					"id" : "MediaCountdowns::@4da9c7c55740fad35c79",
+					"jsonFile" : "target-MediaCountdowns-Release-1943df89e2453733cb18.json",
+					"name" : "MediaCountdowns",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 2,
+					"id" : "MediaCountdownsNotifier::@46487a88c280b4b9eb25",
+					"jsonFile" : "target-MediaCountdownsNotifier-Release-48507dd3f16a4622fdd8.json",
+					"name" : "MediaCountdownsNotifier",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 2,
+					"id" : "MediaCountdownsNotifier_autogen::@46487a88c280b4b9eb25",
+					"jsonFile" : "target-MediaCountdownsNotifier_autogen-Release-6a1434b1a3ee32fcc3c0.json",
+					"name" : "MediaCountdownsNotifier_autogen",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 2,
+					"id" : "MediaCountdownsNotifier_autogen_timestamp_deps::@46487a88c280b4b9eb25",
+					"jsonFile" : "target-MediaCountdownsNotifier_autogen_timestamp_deps-Release-60fc37b6103600c55d71.json",
+					"name" : "MediaCountdownsNotifier_autogen_timestamp_deps",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 1,
+					"id" : "MediaCountdowns_autogen::@4da9c7c55740fad35c79",
+					"jsonFile" : "target-MediaCountdowns_autogen-Release-57960e07fcef0bd4fa65.json",
+					"name" : "MediaCountdowns_autogen",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 1,
+					"id" : "MediaCountdowns_autogen_timestamp_deps::@4da9c7c55740fad35c79",
+					"jsonFile" : "target-MediaCountdowns_autogen_timestamp_deps-Release-b8f885f9d99255b29439.json",
+					"name" : "MediaCountdowns_autogen_timestamp_deps",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "F:/Patrick/Projects/Media Countdowns/Media Countdowns/build/Desktop_Qt_6_7_3_MinGW_64_bit-Release",
+		"source" : "F:/Patrick/Projects/Media Countdowns/Media Countdowns"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 7
+	}
+}
