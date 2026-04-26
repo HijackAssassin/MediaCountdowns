@@ -1,0 +1,130 @@
+#include <QApplication>
+#include <QIcon>
+#include <QDir>
+#include <QStandardPaths>
+#include <QFileInfo>
+#include <QProcess>
+#include <QLocalSocket>
+#include <QLocalServer>
+#include <QCoreApplication>
+#include "mainwindow.h"
+
+static const char* kSingleInstanceServer = "MediaCountdownsMainApp";
+
+int main(int argc, char* argv[])
+{
+    QApplication app(argc, argv);
+    app.setQuitOnLastWindowClosed(false);  // closing window goes to tray, not quit
+
+    // Identity — used by QStandardPaths to resolve %APPDATA%\MediaCountdowns\
+    app.setOrganizationName("MediaCountdowns");
+    app.setApplicationName("MediaCountdowns");
+    app.setApplicationVersion("1.0.0");
+    // Icon is embedded via resources/resources.qrc — Qt's rcc compiler,
+    // not windres, so no path-with-spaces build issues.
+    app.setWindowIcon(QIcon(":/appicon.ico"));
+
+    // ── Single-instance guard ─────────────────────────────────────────────────
+    // If another instance is already running, send it a "show" command and exit.
+    // Root cause of "window doesn't appear on launch": closing the window left
+    // the process alive (setQuitOnLastWindowClosed=false), so the next
+    // double-click spawned a silent second instance that never showed a window.
+    {
+        QLocalSocket probe;
+        probe.connectToServer(kSingleInstanceServer);
+        if (probe.waitForConnected(300)) {
+            probe.write("show\n");
+            probe.waitForBytesWritten(300);
+            return 0;
+        }
+    }
+
+    // First instance — start listening so later launches find us.
+    QLocalServer instanceServer;
+    QLocalServer::removeServer(kSingleInstanceServer);
+    instanceServer.listen(kSingleInstanceServer);
+
+    // Ensure data directory exists
+    QDir().mkpath(
+        QStandardPaths::writableLocation(QStandardPaths::AppDataLocation));
+
+    // ── Migrate old folder names from CineCountdown era ───────────────────────
+    {
+        QString base = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+        if (QDir(base + "/backdrops").exists() && !QDir(base + "/fetched_images").exists())
+            QDir().rename(base + "/backdrops", base + "/fetched_images");
+        if (QDir(base + "/images").exists() && !QDir(base + "/custom_images").exists())
+            QDir().rename(base + "/images", base + "/custom_images");
+    }
+
+    // ── Global dark stylesheet ────────────────────────────────────────────────
+    app.setStyleSheet(R"(
+        QWidget       { font-family: "Segoe UI", sans-serif; }
+        QDialog       { background-color: #1a1a1a; color: #e0e0e0; }
+        QMessageBox   { background-color: #1a1a1a; }
+        QPushButton {
+            background-color: #2a2a2a;
+            color: #cccccc;
+            border: 1px solid #444;
+            border-radius: 4px;
+            padding: 5px 14px;
+            font-size: 13px;
+        }
+        QPushButton:hover   { background-color: #383838; border-color: #666; }
+        QPushButton:pressed { background-color: #111; }
+        QLineEdit {
+            background-color: #222;
+            color: #ffffff;
+            border: 1px solid #444;
+            border-radius: 4px;
+            padding: 4px 8px;
+        }
+        QLineEdit:focus { border-color: #0078d4; }
+        QLabel          { color: #e0e0e0; }
+        QScrollArea     { border: none; }
+        QMenu {
+            background-color: #252525;
+            color: #e0e0e0;
+            border: 1px solid #444;
+        }
+        QMenu::item:selected { background-color: #0078d4; }
+    )");
+
+    // ── Auto-launch tray app if not already running ───────────────────────────
+    {
+        QString trayExe = QCoreApplication::applicationDirPath()
+                          + "/MediaCountdownsNotifier.exe";
+        if (QFileInfo::exists(trayExe)) {
+            QLocalSocket trayProbe;
+            trayProbe.connectToServer("MediaCountdownsTray");
+            if (!trayProbe.waitForConnected(200)) {
+                QProcess::startDetached(trayExe, {});
+            }
+        }
+    }
+
+    MainWindow w;
+
+    // When a second instance (or the tray's isMainAppRunning probe) connects,
+    // only bring the window to front if they actually send "show".
+    // A bare connect-then-disconnect (probe) must NOT raise the window.
+    QObject::connect(&instanceServer, &QLocalServer::newConnection, [&]() {
+        QLocalSocket* sock = instanceServer.nextPendingConnection();
+        if (!sock) return;
+        QObject::connect(sock, &QLocalSocket::readyRead, sock, [sock, &w]() {
+            QString msg = QString::fromUtf8(sock->readAll()).trimmed();
+            if (msg == "show") {
+                w.showMaximized();
+                w.raise();
+                w.activateWindow();
+            }
+            sock->deleteLater();
+        });
+        QObject::connect(sock, &QLocalSocket::disconnected, sock, &QLocalSocket::deleteLater);
+    });
+
+    w.showMaximized();
+    w.raise();
+    w.activateWindow();
+    return app.exec();
+}

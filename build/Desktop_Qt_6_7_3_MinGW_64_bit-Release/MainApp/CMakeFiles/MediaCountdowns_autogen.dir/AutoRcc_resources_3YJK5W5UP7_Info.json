@@ -1,0 +1,25 @@
+{
+	"BUILD_DIR" : "F:/Patrick/Projects/Media Countdowns/Media Countdowns/build/Desktop_Qt_6_7_3_MinGW_64_bit-Release/MainApp/MediaCountdowns_autogen",
+	"CMAKE_BINARY_DIR" : "F:/Patrick/Projects/Media Countdowns/Media Countdowns/build/Desktop_Qt_6_7_3_MinGW_64_bit-Release",
+	"CMAKE_CURRENT_BINARY_DIR" : "F:/Patrick/Projects/Media Countdowns/Media Countdowns/build/Desktop_Qt_6_7_3_MinGW_64_bit-Release/MainApp",
+	"CMAKE_CURRENT_SOURCE_DIR" : "F:/Patrick/Projects/Media Countdowns/Media Countdowns/MainApp",
+	"CMAKE_SOURCE_DIR" : "F:/Patrick/Projects/Media Countdowns/Media Countdowns",
+	"CROSS_CONFIG" : false,
+	"GENERATOR" : "Ninja",
+	"INCLUDE_DIR" : "F:/Patrick/Projects/Media Countdowns/Media Countdowns/build/Desktop_Qt_6_7_3_MinGW_64_bit-Release/MainApp/MediaCountdowns_autogen/include",
+	"INPUTS" : 
+	[
+		"F:/Patrick/Projects/Media Countdowns/Media Countdowns/MainApp/resources/appicon.ico"
+	],
+	"LOCK_FILE" : "F:/Patrick/Projects/Media Countdowns/Media Countdowns/build/Desktop_Qt_6_7_3_MinGW_64_bit-Release/MainApp/CMakeFiles/MediaCountdowns_autogen.dir/AutoRcc_resources_3YJK5W5UP7_Lock.lock",
+	"MULTI_CONFIG" : false,
+	"OPTIONS" : [ "--no-zstd", "-name", "resources" ],
+	"OUTPUT_CHECKSUM" : "3YJK5W5UP7",
+	"OUTPUT_NAME" : "qrc_resources.cpp",
+	"RCC_EXECUTABLE" : "C:/Qt/6.7.3/mingw_64/bin/rcc.exe",
+	"RCC_LIST_OPTIONS" : [ "--list" ],
+	"SETTINGS_FILE" : "F:/Patrick/Projects/Media Countdowns/Media Countdowns/build/Desktop_Qt_6_7_3_MinGW_64_bit-Release/MainApp/CMakeFiles/MediaCountdowns_autogen.dir/AutoRcc_resources_3YJK5W5UP7_Used.txt",
+	"SOURCE" : "F:/Patrick/Projects/Media Countdowns/Media Countdowns/MainApp/resources/resources.qrc",
+	"USE_BETTER_GRAPH" : false,
+	"VERBOSITY" : 0
+}
