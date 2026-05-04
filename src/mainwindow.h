@@ -32,6 +32,7 @@ protected:
     void resizeEvent(QResizeEvent* event) override;
 
 private slots:
+    void checkForUpdates();
     void onSearchClicked();
     void onCustomTileClicked();
     void onSearchResultsReady(const QList<SearchResult>& results);

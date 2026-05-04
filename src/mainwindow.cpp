@@ -5,6 +5,15 @@
 #include "applogger.h"
 #include <QUuid>
 
+#include <QDesktopServices>
+#include <QUrl>
+#include <QDialog>
+#include <QVBoxLayout>
+#include <QHBoxLayout>
+#include <QPushButton>
+#include <QLabel>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <QScrollArea>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -44,13 +53,10 @@ static bool tileOrder(const TileData& a, const TileData& b)
     if (!da.isValid()) return false;   // no-date tiles sort to end
     if (!db.isValid()) return true;
     if (da != db) return da < db;      // different dates: earlier first
-    // Same date — break tie by time (earlier air time first).
-    // Tiles with no air time sort after those that do have one.
-    QTime ta = a.effectiveTime(), tb = b.effectiveTime();
-    if (ta.isValid() && tb.isValid()) return ta < tb;
-    if (ta.isValid())  return true;    // a has time, b doesn't → a first
-    if (tb.isValid())  return false;   // b has time, a doesn't → b first
-    return false;                      // both timeless on same date: equal
+    // Same date — break tie by time. Invalid time = midnight (00:00).
+    QTime ta = a.effectiveTime().isValid() ? a.effectiveTime() : QTime(0, 0);
+    QTime tb = b.effectiveTime().isValid() ? b.effectiveTime() : QTime(0, 0);
+    return ta < tb;
 }
 
 int MainWindow::tabForTile(const TileData& td) const
@@ -263,6 +269,8 @@ MainWindow::MainWindow(QWidget* parent)
         QApplication::style()->standardIcon(QStyle::SP_MediaPlay), this);
 
     loadTiles();
+    // Check for updates 3 seconds after launch so UI is fully ready
+    QTimer::singleShot(3000, this, &MainWindow::checkForUpdates);
 }
 
 MainWindow::~MainWindow() { saveTiles(); }
@@ -1333,4 +1341,79 @@ void MainWindow::showDebugWindow()
         m_debugWindow->raise();
         m_debugWindow->activateWindow();
     }
+}
+
+// =============================================================================
+void MainWindow::checkForUpdates()
+{
+    static const QString kCurrentVersion = "2.0.0";
+    static const QString kApiUrl =
+        "https://api.github.com/repos/HijackAssassin/MediaCountdowns/releases/latest";
+
+    auto* nam = new QNetworkAccessManager(this);
+    QNetworkRequest req(kApiUrl);
+    req.setRawHeader("User-Agent", "MediaCountdowns");
+    auto* reply = nam->get(req);
+
+    connect(reply, &QNetworkReply::finished, this, [this, reply, nam]() {
+        reply->deleteLater();
+        nam->deleteLater();
+        if (reply->error() != QNetworkReply::NoError) return;
+
+        QJsonObject obj = QJsonDocument::fromJson(reply->readAll()).object();
+        QString latest = obj["tag_name"].toString().trimmed();
+        QString url    = obj["html_url"].toString().trimmed();
+        if (latest.isEmpty() || url.isEmpty()) return;
+
+        // Strip leading 'v' for comparison
+        QString latestClean  = latest.startsWith('v') ? latest.mid(1) : latest;
+        QString currentClean = kCurrentVersion.startsWith('v') ? kCurrentVersion.mid(1) : kCurrentVersion;
+        if (latestClean <= currentClean) return;  // already up to date
+
+        // Show update popup
+        auto* dlg = new QDialog(this, Qt::Dialog);
+        dlg->setWindowTitle("Update Available");
+        dlg->setFixedWidth(400);
+        dlg->setAttribute(Qt::WA_DeleteOnClose);
+
+        auto* vlay = new QVBoxLayout(dlg);
+        vlay->setContentsMargins(24, 24, 24, 24);
+        vlay->setSpacing(12);
+
+        auto* title = new QLabel(QString("A new version is available: <b>%1</b>").arg(latest), dlg);
+        title->setStyleSheet("font-size:14px; color:#ffffff;");
+        title->setWordWrap(true);
+        vlay->addWidget(title);
+
+        auto* sub = new QLabel("Would you like to download it?", dlg);
+        sub->setStyleSheet("font-size:12px; color:#aaaaaa;");
+        vlay->addWidget(sub);
+
+        auto* btnRow = new QHBoxLayout;
+        btnRow->setSpacing(8);
+
+        auto* downloadBtn = new QPushButton("Download", dlg);
+        downloadBtn->setStyleSheet(
+            "QPushButton { background:#0078d4; color:#fff; border:none; "
+            "border-radius:4px; padding:8px 20px; font-size:13px; font-weight:bold; }"
+            "QPushButton:hover { background:#1a8de4; }");
+        connect(downloadBtn, &QPushButton::clicked, dlg, [url, dlg]() {
+            QDesktopServices::openUrl(QUrl(url));
+            dlg->accept();
+        });
+
+        auto* laterBtn = new QPushButton("👍 No, Thanks", dlg);
+        laterBtn->setStyleSheet(
+            "QPushButton { background:#2a2a2a; color:#aaa; border:1px solid #444; "
+            "border-radius:4px; padding:8px 20px; font-size:13px; }"
+            "QPushButton:hover { background:#333; color:#fff; }");
+        connect(laterBtn, &QPushButton::clicked, dlg, &QDialog::reject);
+
+        btnRow->addWidget(downloadBtn);
+        btnRow->addWidget(laterBtn);
+        btnRow->addStretch();
+        vlay->addLayout(btnRow);
+
+        dlg->exec();
+    });
 }
