@@ -6,6 +6,7 @@
 #include <QUuid>
 
 #include <QDesktopServices>
+#include <QSettings>
 #include <QUrl>
 #include <QDialog>
 #include <QVBoxLayout>
@@ -1281,7 +1282,7 @@ void MainWindow::setupDebugWindow()
 {
     m_debugWindow = new QDialog(this,
         Qt::Window | Qt::WindowMinMaxButtonsHint | Qt::WindowCloseButtonHint);
-    m_debugWindow->setWindowTitle("Debug Log — Media Countdowns");
+    m_debugWindow->setWindowTitle("Debug Log — Media Countdowns  v2.2.0");
     m_debugWindow->resize(860, 480);
     m_debugWindow->setStyleSheet("background:#111; color:#ccc;");
 
@@ -1311,23 +1312,21 @@ void MainWindow::setupDebugWindow()
     btnRow->addWidget(hintLbl);
     vlay->addLayout(btnRow);
 
-    // Connect logger signal to the text widget
     connect(&AppLogger::instance(), &AppLogger::newEntry,
             this, [this](const QString& entry) {
         if (m_debugLog) {
             m_debugLog->appendPlainText(entry);
-            // Auto-scroll to bottom
             QTextCursor c = m_debugLog->textCursor();
             c.movePosition(QTextCursor::End);
             m_debugLog->setTextCursor(c);
         }
     });
 
-    // Ctrl+Shift+D shortcut
     auto* sc = new QShortcut(QKeySequence("Ctrl+Shift+D"), this);
     connect(sc, &QShortcut::activated, this, &MainWindow::showDebugWindow);
 
     APPLOG("=== Debug log started ===");
+    APPLOG(QString("App version: 2.2.0"));
     APPLOG(QString("Qt version: %1").arg(qVersion()));
 }
 
@@ -1361,14 +1360,38 @@ void MainWindow::checkForUpdates()
         if (reply->error() != QNetworkReply::NoError) return;
 
         QJsonObject obj = QJsonDocument::fromJson(reply->readAll()).object();
-        QString latest = obj["tag_name"].toString().trimmed();
-        QString url    = obj["html_url"].toString().trimmed();
-        if (latest.isEmpty() || url.isEmpty()) return;
+        QString tag = obj["tag_name"].toString().trimmed();
+        QString url = obj["html_url"].toString().trimmed();
+        if (tag.isEmpty() || url.isEmpty()) return;
 
-        // Strip leading 'v' for comparison
-        QString latestClean  = latest.startsWith('v') ? latest.mid(1) : latest;
-        QString currentClean = kCurrentVersion.startsWith('v') ? kCurrentVersion.mid(1) : kCurrentVersion;
-        if (latestClean <= currentClean) return;  // already up to date
+        // Strip any prefix: "Release-V2.2.0", "Release-v2.2.0", "v2.2.0", "V2.2.0" → "2.2.0"
+        auto stripPrefix = [](QString s) -> QString {
+            // Remove "release-" prefix (case insensitive)
+            if (s.startsWith("release-", Qt::CaseInsensitive))
+                s = s.mid(8);
+            // Remove leading v/V
+            if (!s.isEmpty() && (s[0] == 'v' || s[0] == 'V'))
+                s = s.mid(1);
+            return s.trimmed();
+        };
+        QString latestClean  = stripPrefix(tag);
+        QString currentClean = stripPrefix(kCurrentVersion);
+
+        // Parse as version numbers for correct numeric comparison
+        auto parseVer = [](const QString& v) -> QList<int> {
+            QList<int> parts;
+            for (const QString& p : v.split('.')) parts << p.toInt();
+            while (parts.size() < 3) parts << 0;
+            return parts;
+        };
+        QList<int> lv = parseVer(latestClean);
+        QList<int> cv = parseVer(currentClean);
+        if (lv <= cv) return;  // already up to date
+
+        // Check if user already skipped this version
+        QSettings settings("HijackAssassin", "MediaCountdowns");
+        QStringList skipped = settings.value("skippedUpdates").toStringList();
+        if (skipped.contains(latestClean)) return;
 
         // Show update popup
         auto* dlg = new QDialog(this, Qt::Dialog);
@@ -1380,7 +1403,7 @@ void MainWindow::checkForUpdates()
         vlay->setContentsMargins(24, 24, 24, 24);
         vlay->setSpacing(12);
 
-        auto* title = new QLabel(QString("A new version is available: <b>%1</b>").arg(latest), dlg);
+        auto* title = new QLabel(QString("A new version is available: <b>%1</b>").arg(tag), dlg);
         title->setStyleSheet("font-size:14px; color:#ffffff;");
         title->setWordWrap(true);
         vlay->addWidget(title);
@@ -1407,7 +1430,16 @@ void MainWindow::checkForUpdates()
             "QPushButton { background:#2a2a2a; color:#aaa; border:1px solid #444; "
             "border-radius:4px; padding:8px 20px; font-size:13px; }"
             "QPushButton:hover { background:#333; color:#fff; }");
-        connect(laterBtn, &QPushButton::clicked, dlg, &QDialog::reject);
+        connect(laterBtn, &QPushButton::clicked, dlg, [dlg, latestClean]() {
+            // Save this version as skipped so it never prompts again
+            QSettings settings("HijackAssassin", "MediaCountdowns");
+            QStringList skipped = settings.value("skippedUpdates").toStringList();
+            if (!skipped.contains(latestClean)) {
+                skipped << latestClean;
+                settings.setValue("skippedUpdates", skipped);
+            }
+            dlg->reject();
+        });
 
         btnRow->addWidget(downloadBtn);
         btnRow->addWidget(laterBtn);
