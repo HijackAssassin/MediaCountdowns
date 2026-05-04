@@ -353,9 +353,10 @@ void TileWidget::openEditDialog()
 
     QString newPath = dlg.selectedImagePath();
     if (dlg.imageWasReset() || newPath != m_data.imagePath) {
-        deleteBackdropIfOwned(m_data.imagePath);
+        QString oldPath = m_data.imagePath;
         m_data.imagePath = newPath;
         applyImage(newPath);
+        deleteBackdropIfOwned(oldPath);
         changed = true;
     }
 

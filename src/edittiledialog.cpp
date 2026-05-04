@@ -659,8 +659,9 @@ void EditTileDialog::onSelectImage()
     QString dir  = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation)
                    + "/custom_images";
     QDir().mkpath(dir);
-    QString dest = dir + "/" + m_data.id + "_custom." + ext;
-    if (QFile::exists(dest)) QFile::remove(dest);
+    QString dest = dir + "/" + m_data.id + "_"
+                 + QString::number(QDateTime::currentMSecsSinceEpoch())
+                 + "." + ext;
     m_imagePath  = QFile::copy(path, dest) ? dest : path;
     m_imageReset = false;
     updatePreview(m_imagePath);
