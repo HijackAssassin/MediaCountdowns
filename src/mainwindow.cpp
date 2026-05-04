@@ -1346,7 +1346,7 @@ void MainWindow::showDebugWindow()
 // =============================================================================
 void MainWindow::checkForUpdates()
 {
-    static const QString kCurrentVersion = "2.0.0";
+    static const QString kCurrentVersion = "2.2.0";
     static const QString kApiUrl =
         "https://api.github.com/repos/HijackAssassin/MediaCountdowns/releases/latest";
 

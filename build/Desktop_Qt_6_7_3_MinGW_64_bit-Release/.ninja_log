@@ -1,0 +1,22 @@
+# ninja log v6
+8	23	7995727622121436	CMakeFiles/clean.additional	321391b2684b2653
+23	33	7995727622271472	clean	577b940aee94fbd7
+10	21	7995727650598377	CMakeFiles/clean.additional	321391b2684b2653
+22	26	7995727650708403	clean	577b940aee94fbd7
+11	852	7995727659160787	MediaCountdowns_autogen/timestamp	159344bfbbcee1e4
+11	852	7995727659160787	MediaCountdowns_autogen/mocs_compilation.cpp	159344bfbbcee1e4
+11	852	7995727659160787	C:/Users/Patrick/Documents/Media Countdowns/build/Desktop_Qt_6_7_3_MinGW_64_bit-Release/MediaCountdowns_autogen/timestamp	159344bfbbcee1e4
+11	852	7995727659160787	C:/Users/Patrick/Documents/Media Countdowns/build/Desktop_Qt_6_7_3_MinGW_64_bit-Release/MediaCountdowns_autogen/mocs_compilation.cpp	159344bfbbcee1e4
+856	886	7995727659940966	MediaCountdowns_autogen/3YJK5W5UP7/qrc_resources.cpp	1193fa307340daec
+856	886	7995727659940966	C:/Users/Patrick/Documents/Media Countdowns/build/Desktop_Qt_6_7_3_MinGW_64_bit-Release/MediaCountdowns_autogen/3YJK5W5UP7/qrc_resources.cpp	1193fa307340daec
+902	937	7995727660151003	CMakeFiles/MediaCountdowns.dir/MediaCountdowns_autogen/3YJK5W5UP7/qrc_resources.cpp.obj	8fd072c7287012fb
+892	1917	7995727660060990	CMakeFiles/MediaCountdowns.dir/src/addtiledialog.cpp.obj	4e2915bdf31cb3d5
+900	2216	7995727660131009	CMakeFiles/MediaCountdowns.dir/src/jsonmanager.cpp.obj	9ddc860e0f4d5d3
+888	2386	7995727660010981	CMakeFiles/MediaCountdowns.dir/src/main.cpp.obj	4b39abed61f53461
+891	2443	7995727660040990	CMakeFiles/MediaCountdowns.dir/src/tilewidget.cpp.obj	6785aaa7ff20a1d9
+894	2511	7995727660080997	CMakeFiles/MediaCountdowns.dir/src/customtiledialog.cpp.obj	1dfeef8203565317
+896	2604	7995727660090997	CMakeFiles/MediaCountdowns.dir/src/edittiledialog.cpp.obj	d8e6ab4953f418a
+886	2612	7995727659990979	CMakeFiles/MediaCountdowns.dir/MediaCountdowns_autogen/mocs_compilation.cpp.obj	8af0b5a875553fc
+898	3157	7995727660111000	CMakeFiles/MediaCountdowns.dir/src/tmdbscraper.cpp.obj	ab31ff6fce540e2a
+889	3940	7995727660020985	CMakeFiles/MediaCountdowns.dir/src/mainwindow.cpp.obj	1fe82218cb278ceb
+3940	4076	7995727690528556	MediaCountdowns.exe	61afc162ab4c0ca1
