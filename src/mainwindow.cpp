@@ -1282,7 +1282,7 @@ void MainWindow::setupDebugWindow()
 {
     m_debugWindow = new QDialog(this,
         Qt::Window | Qt::WindowMinMaxButtonsHint | Qt::WindowCloseButtonHint);
-    m_debugWindow->setWindowTitle("Debug Log — Media Countdowns  v2.2.0");
+    m_debugWindow->setWindowTitle("Debug Log — Media Countdowns  v2.2.1");
     m_debugWindow->resize(860, 480);
     m_debugWindow->setStyleSheet("background:#111; color:#ccc;");
 
@@ -1326,7 +1326,7 @@ void MainWindow::setupDebugWindow()
     connect(sc, &QShortcut::activated, this, &MainWindow::showDebugWindow);
 
     APPLOG("=== Debug log started ===");
-    APPLOG(QString("App version: 2.2.0"));
+    APPLOG(QString("App version: 2.2.1"));
     APPLOG(QString("Qt version: %1").arg(qVersion()));
 }
 
@@ -1345,7 +1345,7 @@ void MainWindow::showDebugWindow()
 // =============================================================================
 void MainWindow::checkForUpdates()
 {
-    static const QString kCurrentVersion = "2.2.0";
+    static const QString kCurrentVersion = "2.2.1";
     static const QString kApiUrl =
         "https://api.github.com/repos/HijackAssassin/MediaCountdowns/releases/latest";
 
