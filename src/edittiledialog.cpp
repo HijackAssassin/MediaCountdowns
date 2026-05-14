@@ -209,10 +209,8 @@ EditTileDialog::EditTileDialog(const TileData& data, QWidget* parent)
     m_ampmCombo = new QComboBox(this); m_ampmCombo->setStyleSheet(kField); m_ampmCombo->setFixedWidth(68);
     m_ampmCombo->addItem("AM"); m_ampmCombo->addItem("PM");
 
-    // m_initTime = TMDB/original airTime (for reset comparison)
-    // Display the currently-saved customAirTime in the combos if one exists
-    m_initTime  = data.airTime.isValid() ? data.airTime : QTime(0, 0);
-    QTime showTime = data.customAirTime.isValid() ? data.customAirTime : m_initTime;
+    m_initTime = QTime(0, 0);
+    QTime showTime = data.customAirTime.isValid() ? data.customAirTime : QTime(0, 0);
 
     int h12 = showTime.hour() % 12; if (h12 == 0) h12 = 12;
     m_hourCombo->setCurrentIndex(h12 - 1);
@@ -391,12 +389,13 @@ void EditTileDialog::updateResetButtons()
     m_rTitleBtn->setStyleSheet(titleDirty ? kResetActive : kResetGreyed);
     m_rTitleBtn->setEnabled(titleDirty);
 
-    // Date dirty: UI date fields differ from TMDB targetDate
-    bool dateDirty = m_dateRowWidget->isVisible() && (selectedDate() != m_initDate);
+    // Date dirty: stored customDate differs from original fetched date
+    bool dateDirty = (m_data.customDate.isValid() && m_data.customDate != m_data.targetDate)
+                  || (m_dateRowWidget->isVisible() && selectedDate() != m_initDate);
     m_rDateBtn->setStyleSheet(dateDirty ? kResetActive : kResetGreyed);
     m_rDateBtn->setEnabled(dateDirty);
 
-    // Time dirty: UI time combos differ from TMDB/original airTime
+    // Time dirty: stored customAirTime differs from midnight (or UI differs from midnight)
     int h12  = m_hourCombo->currentIndex() + 1;
     int mins = m_minuteCombo->currentIndex();
     bool pm  = (m_ampmCombo->currentIndex() == 1);
@@ -616,6 +615,8 @@ void EditTileDialog::onResetTitle()
 void EditTileDialog::onResetDate()
 {
     m_dateReset = true;
+    m_data.customDate    = QDate();   // clear so dirty check sees no override
+    m_data.customDateStr = "";
     if (m_data.targetDate.isValid()) {
         m_dateCheckState = true;
         m_dateCheck->setChecked(true);
@@ -631,11 +632,12 @@ void EditTileDialog::onResetDate()
 void EditTileDialog::onResetTime()
 {
     m_timeReset = true;
-    int h12 = m_initTime.hour() % 12; if (h12 == 0) h12 = 12;
-    m_hourCombo->setCurrentIndex(h12 - 1);
-    m_minuteCombo->setCurrentIndex(m_initTime.minute());
-    m_ampmCombo->setCurrentIndex(m_initTime.hour() >= 12 ? 1 : 0);
-    // updateResetButtons called via combo signals
+    m_data.customAirTime = QTime();
+    // Reset to midnight and update baseline so button greys out
+    m_initTime = QTime(0, 0);
+    m_hourCombo->setCurrentIndex(11); // 12 AM
+    m_minuteCombo->setCurrentIndex(0);
+    m_ampmCombo->setCurrentIndex(0);
 }
 
 void EditTileDialog::onResetImage()

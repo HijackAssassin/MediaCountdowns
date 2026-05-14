@@ -3,6 +3,7 @@
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QList>
+#include <QSettings>
 #include "tiledata.h"
 
 struct SearchResult {
@@ -43,11 +44,19 @@ private:
     void downloadBackdrop(const QString& tileId, const QString& backdropPath);
     void fetchSeasonForMultiEp(int showId, int season, const QString& airDate,
                                 const TileData& td, bool isRefresh);
+    void fetchSeasonForFutureEp(int showId, int season,
+                                TileData td, bool isRefresh);
     TileData parseDetailsJson(const QJsonObject& obj, const QString& mediaType,
                               const QString& existingId = {}, const QString& existingImage = {});
 
     QNetworkAccessManager* m_nam;
 
-    static constexpr const char* API_KEY = "693ee361bc407ffa8973abcd76d80120";
-    static constexpr const char* BASE    = "https://api.themoviedb.org/3";
+public:
+    static constexpr const char* DEFAULT_API_KEY = "693ee361bc407ffa8973abcd76d80120";
+    static constexpr const char* BASE            = "https://api.themoviedb.org/3";
+    static QString apiKey() {
+        QSettings s("HijackAssassin", "MediaCountdowns");
+        QString k = s.value("tmdbApiKey").toString();
+        return k.isEmpty() ? QString(DEFAULT_API_KEY) : k;
+    }
 };

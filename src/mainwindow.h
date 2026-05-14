@@ -70,6 +70,7 @@ private:
     void smoothScrollBy(QScrollArea* area, int delta);
     void setupDebugWindow();
     void showDebugWindow();
+    void showApiDialog();
     void fireDirectNotification(const TileData& td);
 
     static constexpr int COLS        = 3;

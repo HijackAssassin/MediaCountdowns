@@ -27,6 +27,36 @@ void TmdbScraper::searchMedia(const QString& query)
     q.replace(QRegularExpression("\\bspiderman\\b", QRegularExpression::CaseInsensitiveOption), "spider-man");
     q.replace(QRegularExpression("\\bxmen\\b",      QRegularExpression::CaseInsensitiveOption), "x-men");
 
+    // Marvel alias map — used in filter below, NOT to rewrite the API query
+    // so that searching "punisher" still returns The Punisher (1989) etc.
+    static const QVector<QPair<QString,QString>> kMarvelAliases = {
+        {"daredevil",               "Marvel's Daredevil"},
+        {"the punisher",            "Marvel's The Punisher"},
+        {"punisher",                "Marvel's The Punisher"},
+        {"jessica jones",           "Marvel's Jessica Jones"},
+        {"luke cage",               "Marvel's Luke Cage"},
+        {"iron fist",               "Marvel's Iron Fist"},
+        {"the defenders",           "Marvel's The Defenders"},
+        {"runaways",                "Marvel's Runaways"},
+        {"cloak and dagger",        "Marvel's Cloak & Dagger"},
+        {"cloak & dagger",          "Marvel's Cloak & Dagger"},
+        {"inhumans",                "Marvel's Inhumans"},
+        {"agent carter",            "Marvel's Agent Carter"},
+        {"agents of shield",        "Marvel's Agents of S.H.I.E.L.D."},
+        {"agents of s.h.i.e.l.d.", "Marvel's Agents of S.H.I.E.L.D."},
+        {"ultimate spider-man",     "Marvel's Ultimate Spider-Man"},
+        {"ultimate spiderman",      "Marvel's Ultimate Spider-Man"},
+        {"marvels avengers",        "Marvel's Avengers"},
+    };
+    // Find the Marvel full title that matches this query (if any)
+    QString marvelFullTitle;
+    for (const auto& alias : kMarvelAliases) {
+        if (q.compare(alias.first, Qt::CaseInsensitive) == 0) {
+            marvelFullTitle = alias.second;
+            break;
+        }
+    }
+
     // Detect optional trailing year e.g. "Supergirl 2026"
     int yearFilter = 0;
     QRegularExpression yearRe(R"(\b(19\d{2}|20\d{2})$)");
@@ -38,9 +68,9 @@ void TmdbScraper::searchMedia(const QString& query)
 
     // Fetch 2 pages to get more candidates before filtering (up to ~40 results)
     QString url1 = QString("%1/search/multi?api_key=%2&query=%3&include_adult=false&page=1")
-        .arg(BASE, API_KEY, QString::fromUtf8(QUrl::toPercentEncoding(q)));
+        .arg(BASE, apiKey(), QString::fromUtf8(QUrl::toPercentEncoding(q)));
     QString url2 = QString("%1/search/multi?api_key=%2&query=%3&include_adult=false&page=2")
-        .arg(BASE, API_KEY, QString::fromUtf8(QUrl::toPercentEncoding(q)));
+        .arg(BASE, apiKey(), QString::fromUtf8(QUrl::toPercentEncoding(q)));
 
     // Use a shared state for both pages
     struct PageState {
@@ -50,7 +80,7 @@ void TmdbScraper::searchMedia(const QString& query)
     auto state = QSharedPointer<PageState>::create();
 
 
-    auto processPage = [this, state, q, yearFilter](const QJsonArray& arr) {
+    auto processPage = [this, state, q, yearFilter, marvelFullTitle](const QJsonArray& arr) {
         for (const QJsonValue& v : arr)
             state->combined.append(v);
         state->pagesReceived++;
@@ -146,13 +176,40 @@ void TmdbScraper::searchMedia(const QString& query)
                     && articles.contains(anchoredTitle[0]))
                     anchoredTitle.removeFirst();
 
-                // First-word anchor
-                if (anchoredTitle.isEmpty() || anchoredTitle[0] != queryWords[0])
-                    continue;
+                // First-word anchor — also check subtitle after " - ", " – ", or ": "
+                // Also allow pass-through if this title matches a Marvel alias
+                bool marvelMatch = !marvelFullTitle.isEmpty() &&
+                                   rawTitle.compare(marvelFullTitle, Qt::CaseInsensitive) == 0;
+                bool firstWordOk = marvelMatch ||
+                                   (!anchoredTitle.isEmpty() && anchoredTitle[0] == queryWords[0]);
+                if (!firstWordOk) {
+                    QStringList toSplit = { rawTitle };
+                    const QStringList seps = {" - ", " \u2013 ", " \u2014 ", ": "};
+                    for (const QString& sep : seps) {
+                        QStringList next;
+                        for (const QString& s : toSplit) {
+                            if (s.contains(sep)) {
+                                QString sub = s.section(sep, 1).trimmed();
+                                QStringList subWords = words(sub);
+                                if (!queryStartsWithArticle && !subWords.isEmpty()
+                                    && articles.contains(subWords[0]))
+                                    subWords.removeFirst();
+                                if (!subWords.isEmpty() && subWords[0] == queryWords[0])
+                                    firstWordOk = true;
+                                next << sub;
+                            }
+                        }
+                        toSplit = next;
+                        if (firstWordOk) break;
+                    }
+                }
+                bool subtitleMatch = firstWordOk && !marvelMatch
+                    && !anchoredTitle.isEmpty() && anchoredTitle[0] != queryWords[0];
+                if (!firstWordOk) continue;
 
-                // Prefix-sequence check (only when wordMatch — not compactMatch-only)
+                // Prefix-sequence check (only when wordMatch — not compactMatch-only, not Marvel alias)
                 // Ensures "the boys" doesn't match "The Napa Boys"
-                if (wordMatch && queryWords.size() > 1) {
+                if (wordMatch && !marvelMatch && !subtitleMatch && queryWords.size() > 1) {
                     bool seqOk = true;
                     for (int qi = 0; qi < queryWords.size(); ++qi) {
                         if (qi >= anchoredTitle.size() || anchoredTitle[qi] != queryWords[qi]) {
@@ -305,20 +362,24 @@ TileData TmdbScraper::parseDetailsJson(const QJsonObject& obj,
         QString releaseDate;
 
         QJsonArray releaseResults = obj["release_dates"].toObject()["results"].toArray();
+        bool isTheatrical = false;
         for (const QJsonValue& country : releaseResults) {
             if (country.toObject()["iso_3166_1"].toString() != "US") continue;
             QJsonArray dates = country.toObject()["release_dates"].toArray();
 
             // Priority: type 3 (Theatrical) > type 2 (Limited) > type 4 (Digital) > any
+            int foundType = 0;
             for (int wantType : {3, 2, 4, 1, 5, 6}) {
                 for (const QJsonValue& d : dates) {
                     if (d.toObject()["type"].toInt() == wantType) {
                         releaseDate = d.toObject()["release_date"].toString().left(10);
+                        foundType   = wantType;
                         break;
                     }
                 }
                 if (!releaseDate.isEmpty()) break;
             }
+            isTheatrical = (foundType == 3 || foundType == 2);
             break;
         }
 
@@ -341,7 +402,7 @@ TileData TmdbScraper::parseDetailsJson(const QJsonObject& obj,
         bool isUS = tzId.startsWith("America/") || tzId.startsWith("US/")
                  || tzId == "EST5EDT" || tzId == "CST6CDT"
                  || tzId == "MST7MDT" || tzId == "PST8PDT";
-        if (isUS && td.targetDate.isValid())
+        if (isUS && isTheatrical && td.targetDate.isValid())
             td.targetDate = td.targetDate.addDays(-1);
 
         td.dateDisplay = td.targetDate.toString("MMMM d, yyyy");
@@ -352,13 +413,16 @@ TileData TmdbScraper::parseDetailsJson(const QJsonObject& obj,
     else {
         QJsonObject nextEp = obj["next_episode_to_air"].toObject();
         if (nextEp.isEmpty()) {
-            // #1: no next episode → "Ended", not "Returning Series"
             QJsonObject lastEp = obj["last_episode_to_air"].toObject();
-            td.statusLabel = "Last Episode";  // never use TMDB's "Returning Series" or similar
+            td.statusLabel = "Last Episode";
             if (!lastEp.isEmpty()) {
                 td.targetDate  = QDate::fromString(
                     lastEp["air_date"].toString(), Qt::ISODate);
                 td.dateDisplay = td.targetDate.toString("MMMM d, yyyy");
+                // Store season number so we can scan for future episodes
+                int lastSeason = lastEp["season_number"].toInt();
+                if (lastSeason > 0)
+                    td.rawDateText = QString("SCAN|%1").arg(lastSeason);
             } else {
                 td.dateDisplay = "No Release Date Yet";
             }
@@ -403,7 +467,7 @@ void TmdbScraper::fetchSeasonForMultiEp(int showId, int season,
                                          bool isRefresh)
 {
     QString url = QString("%1/tv/%2/season/%3?api_key=%4")
-        .arg(BASE).arg(showId).arg(season).arg(API_KEY);
+        .arg(BASE).arg(showId).arg(season).arg(apiKey());
 
     QNetworkReply* r = getJson(url);
     connect(r, &QNetworkReply::finished, this, [r, airDate, td, isRefresh, this]() mutable {
@@ -439,13 +503,65 @@ void TmdbScraper::fetchSeasonForMultiEp(int showId, int season,
 }
 
 // =============================================================================
+//  fetchSeasonForFutureEp — called when next_episode_to_air is empty.
+//  Scans the season episode list for any episode with a future air_date.
+//  If found, updates the tile's targetDate and statusLabel to that episode.
+// =============================================================================
+void TmdbScraper::fetchSeasonForFutureEp(int showId, int season,
+                                          TileData td, bool isRefresh)
+{
+    QString url = QString("%1/tv/%2/season/%3?api_key=%4")
+        .arg(BASE).arg(showId).arg(season).arg(apiKey());
+
+    QNetworkReply* r = getJson(url);
+    connect(r, &QNetworkReply::finished, this, [r, td, isRefresh, this]() mutable {
+        r->deleteLater();
+        if (r->error() != QNetworkReply::NoError) {
+            if (isRefresh) emit tileRefreshed(td); else emit dataReady(td);
+            return;
+        }
+        QJsonArray eps = QJsonDocument::fromJson(r->readAll())
+                             .object()["episodes"].toArray();
+        QDate today = QDate::currentDate();
+        QDate bestDate;
+        int bestEp = -1, bestSeason = -1;
+
+        for (const QJsonValue& v : eps) {
+            QJsonObject ep = v.toObject();
+            int epNum = ep["episode_number"].toInt();
+            if (epNum <= 0) continue;
+            QDate d = QDate::fromString(ep["air_date"].toString(), Qt::ISODate);
+            if (!d.isValid() || d <= today) continue;
+            if (!bestDate.isValid() || d < bestDate) {
+                bestDate   = d;
+                bestEp     = epNum;
+                bestSeason = ep["season_number"].toInt();
+            }
+        }
+
+        if (bestDate.isValid() && bestEp > 0) {
+            // Found a future episode — update the tile
+            td.targetDate  = bestDate;
+            td.dateDisplay = bestDate.toString("MMMM d, yyyy");
+            td.statusLabel = QString("S%1E%2")
+                .arg(bestSeason, 2, 10, QChar('0'))
+                .arg(bestEp,     2, 10, QChar('0'));
+            td.rawDateText = QString("%1|%2|%3")
+                .arg(bestDate.toString(Qt::ISODate)).arg(bestSeason).arg(bestEp);
+        }
+        // Emit regardless — if no future ep found the tile stays as "Last Episode"
+        if (isRefresh) emit tileRefreshed(td); else emit dataReady(td);
+    });
+}
+
+// =============================================================================
 //  Phase 2 — fetch full details for a new tile
 // =============================================================================
 void TmdbScraper::fetchDetails(int tmdbId, const QString& mediaType, const QString&)
 {
     QString appendTo = (mediaType == "tv") ? "next_episode_to_air,images" : "release_dates,images";
     QString url = QString("%1/%2/%3?api_key=%4&append_to_response=%5")
-        .arg(BASE, mediaType, QString::number(tmdbId), API_KEY, appendTo);
+        .arg(BASE, mediaType, QString::number(tmdbId), apiKey(), appendTo);
 
     QNetworkReply* r = getJson(url);
     connect(r, &QNetworkReply::finished, this, [r, mediaType, tmdbId, this]() {
@@ -467,9 +583,15 @@ void TmdbScraper::fetchDetails(int tmdbId, const QString& mediaType, const QStri
             td.rawDateText.contains('|'))
         {
             QStringList parts = td.rawDateText.split('|');
-            QString airDate = parts[0];
-            int season      = parts[1].toInt();
-            fetchSeasonForMultiEp(tmdbId, season, airDate, td, false);
+            if (parts[0] == "SCAN") {
+                // next_episode_to_air was empty — scan the season for future episodes
+                int season = parts[1].toInt();
+                fetchSeasonForFutureEp(tmdbId, season, td, false);
+            } else {
+                QString airDate = parts[0];
+                int season      = parts[1].toInt();
+                fetchSeasonForMultiEp(tmdbId, season, airDate, td, false);
+            }
         } else {
             emit dataReady(td);
         }
@@ -486,7 +608,7 @@ void TmdbScraper::refreshTile(const TileData& existing)
 
     QString appendTo = (existing.mediaType == "tv") ? "next_episode_to_air,images" : "release_dates,images";
     QString url = QString("%1/%2/%3?api_key=%4&append_to_response=%5")
-        .arg(BASE, existing.mediaType, QString::number(existing.tmdbId), API_KEY, appendTo);
+        .arg(BASE, existing.mediaType, QString::number(existing.tmdbId), apiKey(), appendTo);
 
     QNetworkReply* r = getJson(url);
     connect(r, &QNetworkReply::finished, this, [r, existing, this]() {
@@ -524,7 +646,11 @@ void TmdbScraper::refreshTile(const TileData& existing)
             QStringList parts = updated.rawDateText.split('|');
             QString airDate = parts[0];
             int season      = parts[1].toInt();
-            fetchSeasonForMultiEp(existing.tmdbId, season, airDate, updated, true);
+            if (parts[0] == "SCAN") {
+                fetchSeasonForFutureEp(existing.tmdbId, season, updated, true);
+            } else {
+                fetchSeasonForMultiEp(existing.tmdbId, season, airDate, updated, true);
+            }
         } else {
             emit tileRefreshed(updated);
         }
@@ -538,7 +664,7 @@ void TmdbScraper::fetchCreditsForResults(const QList<SearchResult>& results)
 {
     for (const SearchResult& sr : results) {
         QString url = QString("%1/%2/%3/credits?api_key=%4")
-            .arg(BASE, sr.mediaType, QString::number(sr.id), API_KEY);
+            .arg(BASE, sr.mediaType, QString::number(sr.id), apiKey());
         int tmdbId    = sr.id;
         QString mtype = sr.mediaType;
         QNetworkReply* r = getJson(url);

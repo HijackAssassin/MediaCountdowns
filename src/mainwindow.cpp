@@ -808,8 +808,8 @@ void MainWindow::onGlobalTick()
             for (TileData& mtd : m_tiles) {
                 if (mtd.id != td.id) continue;
 
-                // Fire notification regardless of loop state
-                fireDirectNotification(mtd);
+                // Mark as notified — TrayApp will fire the actual notification
+                // when it receives the REFRESH signal at the end of this tick.
 
                 if (mtd.isLooped) {
                     APPLOG(QString("onGlobalTick: looped tile '%1' expired — advancing (%2)").arg(mtd.displayTitle(), mtd.loopInterval));
@@ -1282,7 +1282,7 @@ void MainWindow::setupDebugWindow()
 {
     m_debugWindow = new QDialog(this,
         Qt::Window | Qt::WindowMinMaxButtonsHint | Qt::WindowCloseButtonHint);
-    m_debugWindow->setWindowTitle("Debug Log — Media Countdowns  v2.2.1");
+    m_debugWindow->setWindowTitle("Debug Log — Media Countdowns  v2.3.0");
     m_debugWindow->resize(860, 480);
     m_debugWindow->setStyleSheet("background:#111; color:#ccc;");
 
@@ -1323,10 +1323,15 @@ void MainWindow::setupDebugWindow()
     });
 
     auto* sc = new QShortcut(QKeySequence("Ctrl+Shift+D"), this);
+    sc->setContext(Qt::ApplicationShortcut);
     connect(sc, &QShortcut::activated, this, &MainWindow::showDebugWindow);
 
+    auto* scApi = new QShortcut(QKeySequence("Ctrl+Shift+P"), this);
+    scApi->setContext(Qt::ApplicationShortcut);
+    connect(scApi, &QShortcut::activated, this, &MainWindow::showApiDialog);
+
     APPLOG("=== Debug log started ===");
-    APPLOG(QString("App version: 2.2.1"));
+    APPLOG(QString("App version: 2.3.0"));
     APPLOG(QString("Qt version: %1").arg(qVersion()));
 }
 
@@ -1345,7 +1350,7 @@ void MainWindow::showDebugWindow()
 // =============================================================================
 void MainWindow::checkForUpdates()
 {
-    static const QString kCurrentVersion = "2.2.1";
+    static const QString kCurrentVersion = "2.3.0";
     static const QString kApiUrl =
         "https://api.github.com/repos/HijackAssassin/MediaCountdowns/releases/latest";
 
@@ -1448,4 +1453,84 @@ void MainWindow::checkForUpdates()
 
         dlg->exec();
     });
+}
+
+// =============================================================================
+void MainWindow::showApiDialog()
+{
+    QSettings settings("HijackAssassin", "MediaCountdowns");
+    QString current = settings.value("tmdbApiKey", TmdbScraper::DEFAULT_API_KEY).toString();
+
+    auto* dlg = new QDialog(this, Qt::Dialog);
+    dlg->setWindowTitle("TMDB API Key");
+    dlg->setFixedWidth(460);
+    dlg->setAttribute(Qt::WA_DeleteOnClose);
+    dlg->setModal(true);
+
+    auto* vlay = new QVBoxLayout(dlg);
+    vlay->setContentsMargins(20, 20, 20, 20);
+    vlay->setSpacing(10);
+
+    auto* curLbl = new QLabel("Current API Key:", dlg);
+    curLbl->setStyleSheet("color:#888; font-size:11px;");
+    vlay->addWidget(curLbl);
+
+    auto* curVal = new QLabel(current, dlg);
+    curVal->setStyleSheet("color:#555; font-size:11px; font-family:monospace;");
+    curVal->setWordWrap(true);
+    vlay->addWidget(curVal);
+
+    auto* newLbl = new QLabel("New API Key:", dlg);
+    newLbl->setStyleSheet("color:#888; font-size:11px; margin-top:6px;");
+    vlay->addWidget(newLbl);
+
+    auto* edit = new QLineEdit(dlg);
+    edit->setStyleSheet(
+        "QLineEdit { background:#1e1e1e; color:#fff; border:1px solid #3a3a3a; "
+        "border-radius:4px; padding:8px 10px; font-size:13px; font-family:monospace; }"
+        "QLineEdit:focus { border-color:#0078d4; }");
+    edit->setPlaceholderText("Paste new API key here…");
+    vlay->addWidget(edit);
+
+    auto* btnRow = new QHBoxLayout;
+    btnRow->setSpacing(8);
+
+    auto* resetBtn = new QPushButton("Reset to Default", dlg);
+    resetBtn->setStyleSheet(
+        "QPushButton { background:#252525; color:#aaa; border:1px solid #444; "
+        "border-radius:4px; padding:8px 16px; font-size:13px; }"
+        "QPushButton:hover { background:#333; color:#fff; }");
+    connect(resetBtn, &QPushButton::clicked, dlg, [dlg, edit, curVal]() {
+        QSettings s("HijackAssassin", "MediaCountdowns");
+        s.remove("tmdbApiKey");
+        edit->clear();
+        curVal->setText(TmdbScraper::DEFAULT_API_KEY);
+    });
+    btnRow->addWidget(resetBtn);
+    btnRow->addStretch();
+
+    auto* cancelBtn = new QPushButton("Cancel", dlg);
+    cancelBtn->setStyleSheet(
+        "QPushButton { background:#252525; color:#aaa; border:1px solid #444; "
+        "border-radius:4px; padding:8px 20px; font-size:13px; }"
+        "QPushButton:hover { background:#333; }");
+    connect(cancelBtn, &QPushButton::clicked, dlg, &QDialog::reject);
+    btnRow->addWidget(cancelBtn);
+
+    auto* saveBtn = new QPushButton("Save", dlg);
+    saveBtn->setStyleSheet(
+        "QPushButton { background:#0078d4; color:#fff; border:none; "
+        "border-radius:4px; padding:8px 28px; font-size:13px; font-weight:bold; }"
+        "QPushButton:hover { background:#1a8de4; }");
+    connect(saveBtn, &QPushButton::clicked, dlg, [&, dlg, edit]() {
+        QString key = edit->text().trimmed();
+        if (key.isEmpty()) return;
+        QSettings s("HijackAssassin", "MediaCountdowns");
+        s.setValue("tmdbApiKey", key);
+        dlg->accept();
+    });
+    btnRow->addWidget(saveBtn);
+    vlay->addLayout(btnRow);
+
+    dlg->exec();
 }
