@@ -165,6 +165,18 @@ MainWindow::MainWindow(QWidget* parent)
 
     cornerLayout->addWidget(exportBtn);
     cornerLayout->addWidget(importBtn);
+
+    auto* prefBtn = new QPushButton("⚙", cornerWidget);
+    prefBtn->setFixedHeight(28);
+    prefBtn->setFixedWidth(34);
+    prefBtn->setToolTip("Search Preferences");
+    prefBtn->setStyleSheet(
+        "QPushButton { background:#1e2a1e; color:#66cc88; border:1px solid #2a5a2a; "
+        "border-radius:5px; font-size:14px; padding:0; }"
+        "QPushButton:hover { background:#2a3a2a; }");
+    connect(prefBtn, &QPushButton::clicked, this, &MainWindow::showPreferencesDialog);
+    cornerLayout->addWidget(prefBtn);
+
     m_tabs->setCornerWidget(cornerWidget, Qt::TopRightCorner);
 
     connect(m_tabs, &QTabWidget::currentChanged, this, [this](int newTab) {
@@ -1282,7 +1294,7 @@ void MainWindow::setupDebugWindow()
 {
     m_debugWindow = new QDialog(this,
         Qt::Window | Qt::WindowMinMaxButtonsHint | Qt::WindowCloseButtonHint);
-    m_debugWindow->setWindowTitle("Debug Log — Media Countdowns  v2.3.0");
+    m_debugWindow->setWindowTitle("Debug Log — Media Countdowns  v2.4.0");
     m_debugWindow->resize(860, 480);
     m_debugWindow->setStyleSheet("background:#111; color:#ccc;");
 
@@ -1331,7 +1343,7 @@ void MainWindow::setupDebugWindow()
     connect(scApi, &QShortcut::activated, this, &MainWindow::showApiDialog);
 
     APPLOG("=== Debug log started ===");
-    APPLOG(QString("App version: 2.3.0"));
+    APPLOG(QString("App version: 2.4.0"));
     APPLOG(QString("Qt version: %1").arg(qVersion()));
 }
 
@@ -1350,7 +1362,7 @@ void MainWindow::showDebugWindow()
 // =============================================================================
 void MainWindow::checkForUpdates()
 {
-    static const QString kCurrentVersion = "2.3.0";
+    static const QString kCurrentVersion = "2.4.0";
     static const QString kApiUrl =
         "https://api.github.com/repos/HijackAssassin/MediaCountdowns/releases/latest";
 
@@ -1527,6 +1539,92 @@ void MainWindow::showApiDialog()
         if (key.isEmpty()) return;
         QSettings s("HijackAssassin", "MediaCountdowns");
         s.setValue("tmdbApiKey", key);
+        dlg->accept();
+    });
+    btnRow->addWidget(saveBtn);
+    vlay->addLayout(btnRow);
+
+    dlg->exec();
+}
+
+// =============================================================================
+void MainWindow::showPreferencesDialog()
+{
+    QSettings prefs("HijackAssassin", "MediaCountdowns");
+
+    auto* dlg = new QDialog(this, Qt::Dialog);
+    dlg->setWindowTitle("Search Preferences");
+    dlg->setFixedWidth(320);
+    dlg->setAttribute(Qt::WA_DeleteOnClose);
+    dlg->setModal(true);
+
+    auto* vlay = new QVBoxLayout(dlg);
+    vlay->setContentsMargins(20, 20, 20, 20);
+    vlay->setSpacing(6);
+
+    auto* titleLbl = new QLabel("Show in search results", dlg);
+    titleLbl->setStyleSheet("color:#aaa; font-size:12px; font-weight:bold; margin-bottom:4px;");
+    vlay->addWidget(titleLbl);
+
+    auto makeCheck = [&](const QString& label, const QString& key, bool defaultVal) -> QCheckBox* {
+        auto* cb = new QCheckBox(label, dlg);
+        cb->setChecked(prefs.value(key, defaultVal).toBool());
+        cb->setStyleSheet("color:#cccccc; font-size:13px;");
+        vlay->addWidget(cb);
+        return cb;
+    };
+
+    auto* cbMovies    = makeCheck("Movies",                  "pref_movies",      true);
+    auto* cbShows     = makeCheck("Shows",                   "pref_shows",       true);
+    auto* cbReality   = makeCheck("Reality TV",              "pref_reality",     true);
+    auto* cbDocs      = makeCheck("Documentaries",           "pref_docs",        true);
+    auto* cbTalk      = makeCheck("Talk Shows",              "pref_talk",        true);
+    auto* cbForeign   = makeCheck("Foreign (non-English)",   "pref_foreign",     true);
+
+    // Mutual lock: at least one of Movies/Shows must stay checked
+    auto enforceLock = [=]() {
+        if (!cbMovies->isChecked()) {
+            cbShows->setChecked(true);
+            cbShows->setEnabled(false);
+        } else {
+            cbShows->setEnabled(true);
+        }
+        if (!cbShows->isChecked()) {
+            cbMovies->setChecked(true);
+            cbMovies->setEnabled(false);
+        } else {
+            cbMovies->setEnabled(true);
+        }
+    };
+    enforceLock();
+    connect(cbMovies, &QCheckBox::toggled, dlg, [=]{ enforceLock(); });
+    connect(cbShows,  &QCheckBox::toggled, dlg, [=]{ enforceLock(); });
+
+    auto* sep = new QFrame(dlg); sep->setFrameShape(QFrame::HLine);
+    sep->setStyleSheet("color:#2a2a2a;");
+    vlay->addWidget(sep);
+
+    auto* btnRow = new QHBoxLayout; btnRow->setSpacing(8); btnRow->addStretch();
+    auto* cancelBtn = new QPushButton("Cancel", dlg);
+    cancelBtn->setStyleSheet(
+        "QPushButton { background:#252525; color:#aaa; border:1px solid #444; "
+        "border-radius:4px; padding:8px 16px; font-size:13px; }"
+        "QPushButton:hover { background:#333; }");
+    connect(cancelBtn, &QPushButton::clicked, dlg, &QDialog::reject);
+    btnRow->addWidget(cancelBtn);
+
+    auto* saveBtn = new QPushButton("Save", dlg);
+    saveBtn->setStyleSheet(
+        "QPushButton { background:#0078d4; color:#fff; border:none; "
+        "border-radius:4px; padding:8px 24px; font-size:13px; font-weight:bold; }"
+        "QPushButton:hover { background:#1a8de4; }");
+    connect(saveBtn, &QPushButton::clicked, dlg, [=, &prefs]() {
+        prefs.setValue("pref_movies",  cbMovies->isChecked());
+        prefs.setValue("pref_shows",   cbShows->isChecked());
+        prefs.setValue("pref_reality", cbReality->isChecked());
+        prefs.setValue("pref_docs",    cbDocs->isChecked());
+        prefs.setValue("pref_talk",    cbTalk->isChecked());
+        prefs.setValue("pref_foreign", cbForeign->isChecked());
         dlg->accept();
     });
     btnRow->addWidget(saveBtn);

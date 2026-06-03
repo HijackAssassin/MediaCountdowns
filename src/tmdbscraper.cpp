@@ -118,8 +118,18 @@ void TmdbScraper::searchMedia(const QString& query)
         QStringList queryWords   = words(q);
         QString     queryCompact = compact(q);
 
-        // Genre ids to block: 99 = Documentary, 10767 = Talk Show, 10764 = Reality
-        static const QSet<int> blockedGenres = {99, 10767, 10764};
+        QSettings prefs("HijackAssassin", "MediaCountdowns");
+        bool showMovies   = prefs.value("pref_movies",  true).toBool();
+        bool showShows    = prefs.value("pref_shows",   true).toBool();
+        bool showReality  = prefs.value("pref_reality", true).toBool();
+        bool showDocs     = prefs.value("pref_docs",    true).toBool();
+        bool showTalk     = prefs.value("pref_talk",    true).toBool();
+        bool showForeign  = prefs.value("pref_foreign", true).toBool();
+
+        QSet<int> blockedGenres;
+        if (!showReality) blockedGenres << 10764;
+        if (!showDocs)    blockedGenres << 99;
+        if (!showTalk)    blockedGenres << 10767;
 
         QList<SearchResult> results;
 
@@ -127,6 +137,8 @@ void TmdbScraper::searchMedia(const QString& query)
             QJsonObject o = v.toObject();
             QString type = o["media_type"].toString();
             if (type != "movie" && type != "tv") continue;
+            if (type == "movie" && !showMovies) continue;
+            if (type == "tv"    && !showShows)  continue;
 
             QString rawTitle = (type == "movie") ? o["title"].toString()
                                                  : o["name"].toString();
@@ -144,8 +156,8 @@ void TmdbScraper::searchMedia(const QString& query)
             }
             if (hasBlockedGenre) continue;
 
-            // ── Original language must be English ─────────────────────────────
-            if (o["original_language"].toString() != "en") continue;
+            // ── Original language must be English (unless foreign allowed) ─────
+            if (!showForeign && o["original_language"].toString() != "en") continue;
 
             // ── Title matching — query words must all appear in title ──────────
             QStringList titleWords = words(rawTitle);
@@ -419,8 +431,12 @@ TileData TmdbScraper::parseDetailsJson(const QJsonObject& obj,
                 td.targetDate  = QDate::fromString(
                     lastEp["air_date"].toString(), Qt::ISODate);
                 td.dateDisplay = td.targetDate.toString("MMMM d, yyyy");
-                // Store season number so we can scan for future episodes
                 int lastSeason = lastEp["season_number"].toInt();
+                int lastEpNum  = lastEp["episode_number"].toInt();
+                if (lastSeason > 0 && lastEpNum > 0)
+                    td.statusLabel = QString("S%1E%2")
+                        .arg(lastSeason, 2, 10, QChar('0'))
+                        .arg(lastEpNum,  2, 10, QChar('0'));
                 if (lastSeason > 0)
                     td.rawDateText = QString("SCAN|%1").arg(lastSeason);
             } else {

@@ -71,6 +71,7 @@ private:
     void setupDebugWindow();
     void showDebugWindow();
     void showApiDialog();
+    void showPreferencesDialog();
     void fireDirectNotification(const TileData& td);
 
     static constexpr int COLS        = 3;

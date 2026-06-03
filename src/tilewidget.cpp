@@ -248,8 +248,12 @@ QString TileWidget::formatTitleLine() const
     QString name = extractShowName();
     if (!m_data.hasDate())
         return name + "  \xe2\x80\xa2  No Release Date";
-    if (m_data.isExpired())
-        return name + "  \xe2\x80\xa2  " + m_data.displayDate();
+    if (m_data.isExpired()) {
+        QString epTag = (m_data.mediaType == "tv") ? formatEpisodeTag() : QString();
+        QString line = name;
+        if (!epTag.isEmpty()) line += " " + epTag;
+        return line + "  \xe2\x80\xa2  " + m_data.displayDate();
+    }
     QString epTag = (m_data.mediaType == "tv") ? formatEpisodeTag() : QString();
     QString line = name;
     if (!epTag.isEmpty()) line += " " + epTag;
